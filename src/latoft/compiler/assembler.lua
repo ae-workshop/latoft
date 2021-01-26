@@ -20,7 +20,6 @@ local INS_CREATE_M     = INSTRUCTIONS.CREATE_M
 local INS_SELECT_ALL   = INSTRUCTIONS.SELECT_ALL
 local INS_SELECT_ALL_M = INSTRUCTIONS.SELECT_ALL_M
 local INS_SELECT_ONE   = INSTRUCTIONS.SELECT_ONE
-local INS_SELECT_ONE_M = INSTRUCTIONS.SELECT_ONE_M
 local INS_REACT_ALL    = INSTRUCTIONS.REACT_ALL
 local INS_REACT_ALL_M  = INSTRUCTIONS.REACT_ALL_M
 local INS_REACT_ONE    = INSTRUCTIONS.REACT_ONE
@@ -42,7 +41,6 @@ local INS_DO           = INSTRUCTIONS.DO
 local INS_FORK         = INSTRUCTIONS.FORK
 local INS_ASSERT       = INSTRUCTIONS.ASSERT
 local INS_TRY          = INSTRUCTIONS.TRY
-local INS_WAIT         = INSTRUCTIONS.WAIT
 
 local ARTICAL_INSTRUCTION_MAP = {
     ["ae"] = INS_GROUP,
@@ -54,11 +52,10 @@ local ARTICAL_INSTRUCTION_MAP = {
 }
 
 local GRAMMATICAL_PREFIX_INSTRUCTION_MAP = {
-    ["e"]  = INS_FORK,
-    ["te"] = INS_DO,
-    ["me"] = INS_ASSERT,
+    ["pe"] = INS_DO,
     ["ji"] = INS_TRY,
-    ["se"] = INS_WAIT
+    ["se"] = INS_FORK,
+    ["me"] = INS_ASSERT
 }
 
 local assembler = {}
@@ -69,6 +66,7 @@ local function emit(state, ...)
     for i = 1, #ins do
         code[#code+1] = ins[i]
     end
+    return #code
 end
 
 local function entity_atom(state, phrase)
@@ -77,8 +75,8 @@ local function entity_atom(state, phrase)
     local id = atoms[raw]
 
     if not id then
-        local count = state.atom_count
-        state.atom_count = count + 1
+        local count = state.atom_acc
+        state.atom_acc = count + 1
         id = count << 2
         atoms[raw] = id
     end
@@ -92,9 +90,9 @@ local function raw_action_atom(state, phrase)
     local id = atoms[stem]
 
     if not id then
-        local count = state.atom_count
-        state.atom_count = count + 1
-        id = count << 2 + 3
+        local count = state.atom_acc
+        state.atom_acc = count + 1
+        id = (count << 2) + 3
         atoms[stem] = id
     end
 
@@ -302,9 +300,13 @@ build_predicate_phrase = function(state, phrase)
     local ins = get_verb_instruction(phrase, INS_DO)
     if not ins then return end
 
-    emit(state, INS_SCOPE)
+    local index = emit(state, INS_SCOPE, 0)
     raw_build_verb_phrase(state, ins, phrase)
-    emit(state, INS_RETURN)
+    state.code[index] = emit(state, INS_RETURN)
+
+    if phrase.verb.subtype[4] == "cadence" then
+        emit(state, INS_RETRACE)
+    end
 end
 
 build_nonpredicate_phrase = function(state, phrase, default_instruction)
@@ -324,20 +326,20 @@ build_nonpredicate_phrase = function(state, phrase, default_instruction)
         end
     end
 
-    emit(state, INS_SCOPE)
+    local index = emit(state, INS_SCOPE, 0)
     if reflective then
         emit(state, INS_REFLECT,
             phrase.verb.subtype[2] == "active" and 0 or 1)
     end
     raw_build_verb_phrase(state, ins, phrase)
-    emit(state, INS_RETURN)
+    state.code[index] = emit(state, INS_RETURN)
 end
 
 assembler.build = function(phrases)
     local state = {
         code = {},
         atoms = {},
-        atom_count = 0,
+        atom_acc = 1,
         entities = {},
         refered_entity_count = 0
     }
@@ -346,15 +348,12 @@ assembler.build = function(phrases)
         build_predicate_phrase(state, phrases[i])
     end
 
-    emit(state, INS_RETRACE)
-
     local code = state.code
-    local atoms = {}
-    for k, v in pairs(state.atoms) do
-        atoms[v] = k
+    if code[#code] ~= INS_RETRACE then
+        emit(state, INS_RETRACE)
     end
-    code.atoms = atoms
 
+    code.atoms = state.atoms
     return code
 end
 

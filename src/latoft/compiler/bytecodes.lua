@@ -39,8 +39,7 @@ bytecodes.INSTRUCTIONS = {
     DO           = 0x60,
     FORK         = 0x61,
     ASSERT       = 0x62,
-    TRY          = 0x63,
-    WAIT         = 0x64
+    TRY          = 0x63
 }
 
 local SCOPE_POLICY_NAMES = {}

@@ -30,11 +30,11 @@ local function two_number_formatter(code, index)
     }
 end
 
-local function atom_formatter(code, index)
-    return {code.atoms[arg(code, index)]}
+local function atom_formatter(code, index, atom_map)
+    return {atom_map[arg(code, index)]}
 end
 
-local function entity_formatter(code, index)
+local function entity_formatter(code, index, atom_map)
     local args = {}
     local role = arg(code, index)
     local count = arg(code, index+1)
@@ -42,16 +42,16 @@ local function entity_formatter(code, index)
 
     args[#args+1] = tostring(role)
     args[#args+1] = tostring(count)
-    for i = 1, count do
-        args[#args+1] = code.atoms[arg(code, index + i)]
-    end
 
+    for i = 1, count do
+        args[#args+1] = atom_map[arg(code, index + i)]
+    end
     return args
 end
 
 local INS = bytecodes.INSTRUCTIONS
 local ARGUMENT_FORMATTERS = {
-    [INS.SCOPE]        = no_arg_formatter,
+    [INS.SCOPE]        = one_number_formatter,
     [INS.RETURN]       = no_arg_formatter,
     [INS.RETRACE]      = no_arg_formatter,
     [INS.JUMP]         = one_number_formatter,
@@ -86,13 +86,17 @@ local ARGUMENT_FORMATTERS = {
     [INS.DO]           = atom_formatter,
     [INS.FORK]         = atom_formatter,
     [INS.ASSERT]       = atom_formatter,
-    [INS.TRY]          = atom_formatter,
-    [INS.WAIT]         = atom_formatter
+    [INS.TRY]          = atom_formatter
 }
 
-prettyprinter.format = function(code, atoms)
+prettyprinter.format = function(code)
     local r = {}
     local index = 1
+
+    local atom_map = {}
+    for label, atom in pairs(code.atoms) do
+        atom_map[atom] = label
+    end
 
     while index <= #code do
         local ins = code[index]
@@ -105,7 +109,7 @@ prettyprinter.format = function(code, atoms)
         index = index + 1
 
         local arg_formatter = ARGUMENT_FORMATTERS[ins]
-        local success, args = pcall(arg_formatter, code, index)
+        local success, args = pcall(arg_formatter, code, index, atom_map)
         if not success then
             error("invalid instruction: "..ins.." [#"..index.."]\n"..concat(r))
         end

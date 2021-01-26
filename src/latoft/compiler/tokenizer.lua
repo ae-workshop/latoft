@@ -188,15 +188,15 @@ local GRAMMATICAL_ASPECT_MARKS = {
 }
 
 local GRAMMATICAL_PREFIXES = {
+    ["pu"] = "before",
+    ["ji"] = "optional",
+    ["se"] = "parrallel",
+    ["me"] = "condition",
     ["hi"] = "reason",
     ["va"] = "result",
-    ["me"] = "condition",
     ["pu"] = "purpose",
     ["de"] = "theme",
-    ["e"]  = "apposition",
-    ["te"] = "adversative",
-    ["vi"] = "synonym",
-    ["se"] = "parrallel"
+    ["vi"] = "synonym"
 }
 
 local LEXICAL_PREFIXES = {
@@ -234,25 +234,37 @@ local GRAMMATICAL_POSTFIXES = {
     ["s"]   = {"predicative", "active", 2},
     ["sai"] = {"predicative", "active", 2, "honorific"},
     [0]     = {"predicative", "active", 3},
-    ["tai"] = {"predicative", "active", 3, "honorific"},
+    ["dai"] = {"predicative", "active", 3, "honorific"},
 
     ["ni"] = {"predicative", "passive", 1},
     ["si"] = {"predicative", "passive", 2},
-    ["ti"] = {"predicative", "passive", 3},
+    ["di"] = {"predicative", "passive", 3},
 
     ["nu"] = {"predicative", "employment", 1},
     ["su"] = {"predicative", "employment", 2},
-    ["tu"] = {"predicative", "employment", 3},
+    ["du"] = {"predicative", "employment", 3},
+
+    ["ne"]  = {"predicative", "active", 1, "cadence"},
+    ["se"]  = {"predicative", "active", 2, "cadence"},
+    ["de"]  = {"predicative", "active", 3, "cadence"},
+
+    ["nie"] = {"predicative", "passive", 1, "cadence"},
+    ["sie"] = {"predicative", "passive", 2, "cadence"},
+    ["die"] = {"predicative", "passive", 3, "cadence"},
+
+    ["nue"] = {"predicative", "employment", 1, "cadence"},
+    ["sue"] = {"predicative", "employment", 2, "cadence"},
+    ["due"] = {"predicative", "employment", 3, "cadence"},
 
     -- infinitive verb
 
-    ["ta"]  = {"adverbial", "active"},
-    ["ten"] = {"adverbial", "passive"},
-    ["tit"] = {"adverbial", "employment"},
+    ["c"]   = {"adverbial", "active"},
+    ["cen"] = {"adverbial", "passive"},
+    ["cit"] = {"adverbial", "employment"},
 
-    ["fa"]  = {"adjective", "active"},
-    ["fen"] = {"adjective", "passive"},
-    ["fit"] = {"adjective", "employment"},
+    ["l"]   = {"adjective", "active"},
+    ["len"] = {"adjective", "passive"},
+    ["lit"] = {"adjective", "employment"},
 
     -- gerund
 
